@@ -75,7 +75,8 @@ export function compareAnalyses(
   const scores = head.scores.map((score) => {
     const previous = base.scores.find((candidate) => candidate.key === score.key);
     const from = previous?.value ?? 0;
-    return { key: score.key, label: score.label, from, to: score.value, delta: score.value - from };
+    const to = score.value ?? from;
+    return { key: score.key, label: score.label, from, to, delta: to - from };
   });
 
   const overallFrom = overallScore(base.scores);

@@ -141,14 +141,14 @@ ${result.libraries
 <h2>Scoring methodology</h2>
 ${result.scores
   .map(
-    (score) => `<h3>${escapeHtml(score.label)} — ${score.value}/100</h3><p>${escapeHtml(score.methodology)}</p>
+    (score) => `<h3>${escapeHtml(score.label)} — ${score.value === null ? "not available" : `${score.value}/100`}</h3>${score.statusReason ? `<p><em>${escapeHtml(score.statusReason)}</em></p>` : ""}<p>${escapeHtml(score.methodology)}</p>
 <table><thead><tr><th>Rule</th><th>Severity</th><th>Deduction</th></tr></thead><tbody>
 ${
   score.contributions
     .map((contribution) => `<tr><td class="mono">${escapeHtml(contribution.ruleId)}</td><td>${contribution.severity}</td><td>−${contribution.deduction}</td></tr>`)
     .join("") || '<tr><td colspan="3">No deductions.</td></tr>'
 }
-<tr><th>Final</th><th></th><th>${score.start} − ${score.start - score.value} = ${score.value}</th></tr>
+<tr><th>Final</th><th></th><th>${score.value === null ? "not scored (insufficient evidence)" : `${score.start} − ${score.start - score.value} = ${score.value}`}</th></tr>
 </tbody></table>`,
   )
   .join("")}

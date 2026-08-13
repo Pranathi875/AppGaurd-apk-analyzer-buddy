@@ -148,7 +148,9 @@ function AnalysisPage() {
         {result.scores.map((score) => (
           <div key={score.key} className="rounded-lg border border-border bg-card p-4">
             <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{score.label}</p>
-            <p className={`font-display text-3xl font-semibold ${scoreColor(score.value)}`}>{score.value}</p>
+            <p className={`font-display text-3xl font-semibold ${scoreColor(score.value ?? 0)}`}>
+              {score.value ?? "n/a"}
+            </p>
             <p className="mt-1 text-[11px] text-muted-foreground">
               {score.contributions.length} deduction{score.contributions.length === 1 ? "" : "s"}
             </p>
@@ -301,11 +303,16 @@ function AnalysisPage() {
             <div key={score.key} className="rounded-lg border border-border bg-card p-5">
               <div className="flex items-baseline justify-between">
                 <h3 className="font-display text-sm font-semibold">{score.label}</h3>
-                <span className={`font-display text-xl font-semibold ${scoreColor(score.value)}`}>
-                  {score.value}/100
+                <span className={`font-display text-xl font-semibold ${scoreColor(score.value ?? 0)}`}>
+                  {score.value === null ? "n/a" : `${score.value}/100`}
                 </span>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{score.methodology}</p>
+              {score.statusReason ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {score.status}: {score.statusReason}
+                </p>
+              ) : null}
               <ul className="mt-3 space-y-1 font-mono text-[11px] text-muted-foreground">
                 <li>start {score.start}</li>
                 {score.contributions.map((contribution) => (

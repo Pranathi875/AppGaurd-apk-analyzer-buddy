@@ -10,7 +10,7 @@ import { capabilityTokens } from "./config/capabilities";
 import { libraryTokens } from "./config/libraries";
 import { RULES_VERSION } from "./config/rules";
 import { detectCapabilities } from "./capabilities";
-import { scanDex } from "./dex";
+import { scanDex, type DexInput } from "./dex";
 import { detectLibraries } from "./libraries";
 import { buildManifestModel } from "./manifest";
 import { analyzePermissions } from "./permissions";
@@ -85,18 +85,28 @@ export async function analyzeApk(bytes: Uint8Array, options: AnalyzeOptions): Pr
 
   report("dex", 50);
   const dexEntries = zip.find((entry) => /^classes\d*\.dex$/.test(entry.name));
-  const dexBuffers: Uint8Array[] = [];
+  const dexInputs: DexInput[] = [];
+  const unreadable: string[] = [];
   let dexReadError: string | null = null;
   for (const entry of dexEntries) {
     try {
-      dexBuffers.push(await zip.read(entry));
+      dexInputs.push({ name: entry.name, bytes: await zip.read(entry) });
     } catch (cause) {
+      unreadable.push(entry.name);
       dexReadError = cause instanceof Error ? cause.message : "DEX entry unreadable";
     }
   }
 
   const tokens = [...new Set([...capabilityTokens(), ...libraryTokens(), ...EXTRA_DEX_TOKENS])];
-  const dex = scanDex(dexBuffers, { tokens });
+  // Chunked + yielding so every classes*.dex is scanned without freezing the UI.
+  const dex = await scanDex(dexInputs, {
+    tokens,
+    onProgress: (fraction) => report("dex", 50 + Math.round(fraction * 15)),
+  });
+  for (const name of unreadable) {
+    dex.files.push({ name, status: "FAILED", classCount: 0, stringCount: 0, reason: dexReadError });
+    dex.truncated = true;
+  }
   if (dexReadError && !dex.error) dex.error = dexReadError;
 
   report("capabilities", 70);
@@ -107,7 +117,11 @@ export async function analyzeApk(bytes: Uint8Array, options: AnalyzeOptions): Pr
 
   report("rules", 85);
   const findings = evaluateRules({ file, manifest, dex, permissions, capabilities });
-  const scores = computeScores(findings);
+  const scores = computeScores(findings, {
+    manifestParsed: manifest.parsed,
+    dexParsed: dex.parsed,
+    dexComplete: dex.parsed && !dex.truncated,
+  });
 
   report("done", 100);
 
