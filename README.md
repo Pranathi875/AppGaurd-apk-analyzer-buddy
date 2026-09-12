@@ -1,5 +1,5 @@
 # APK Insight Buddy
-https://vercel.com/pranathi5/app-gaurd-apk-analyzer-buddy
+
 "https://github.com/Pranathi875/apk-insight-buddy-5f74d2b0" The current AppGuard output is significantly improved. Do NOT rebuild or redesign the project. Make only the following corrections to the existing implementation.
 
 ### 1. Fix DEX truncation
